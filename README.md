@@ -24,6 +24,14 @@ python analyzer.py . --json --fail-on-findings
 
 The JSON report includes the root directory, number of scanned files, and findings with relative file paths, line numbers and rule identifiers. Exit status is 0 by default, 1 for findings when explicitly requested, and 2 for invalid command-line arguments or a missing directory.
 
+## Customize checks
+
+Repeat `--rule` to select only specific rules, and repeat `--exclude-dir` to skip additional directory names while preserving default exclusions.
+
+```sh
+python analyzer.py . --rule trailing-whitespace --rule missing-final-newline --exclude-dir generated
+```
+
 ## Current checks
 
 - Trailing spaces and tabs.
@@ -45,4 +53,4 @@ GitHub Actions runs syntax checks, unit tests and a JSON smoke test. See [workfl
 - [Roadmap](docs/ROADMAP.md)
 - [Progress log](docs/PROGRESS.md)
 
-Planned features include configurable rules, accessible HTML reports and optional AI suggestions. These are not implemented yet.
+Planned features include accessible HTML reports and optional AI suggestions. These are not implemented yet.
