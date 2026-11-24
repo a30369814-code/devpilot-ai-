@@ -1,6 +1,7 @@
 """Dependency-free, read-only checks for local source trees."""
 import argparse
 import json
+import sys
 from pathlib import Path
 
 SKIP_DIRS = {'.git', '.venv', 'venv', 'node_modules', '__pycache__', 'dist', 'build'}
@@ -42,6 +43,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description='Read-only source hygiene analyzer')
     parser.add_argument('path', nargs='?', default='.', help='Directory to inspect')
     parser.add_argument('--json', action='store_true', help='Output JSON')
+    parser.add_argument('--fail-on-findings', action='store_true',
+                        help='Exit with status 1 when any findings are detected')
     args = parser.parse_args()
     try:
         result = analyze(Path(args.path))
@@ -53,6 +56,8 @@ def main() -> None:
         print(f"Scanned {result['files_scanned']} files; {len(result['findings'])} findings")
         for item in result['findings']:
             print(f"{item['file']}:{item['line']}: {item['rule']}")
+    if args.fail_on_findings and result['findings']:
+        sys.exit(1)
 
 
 if __name__ == '__main__':
