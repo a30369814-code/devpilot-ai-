@@ -5,10 +5,13 @@
 - [x] Exclude dependency and build folders
 - [x] Human-readable and JSON reports
 - [x] Standard-library unit tests
+- [x] GitHub Actions CI for Python tests
+- [x] Opt-in failing exit status for CI
+- [x] Usage and limitations guide (pending documentation PR)
 
 ## Next
-- [ ] GitHub Actions CI for Python tests
 - [ ] Configurable rules and exclusions
+- [ ] Improve directory traversal and skipped-file reporting
 - [ ] HTML report with accessible design
 - [ ] Optional GitHub PR integration (read-only first)
 - [ ] Optional AI suggestions with explicit opt-in and cost limits
