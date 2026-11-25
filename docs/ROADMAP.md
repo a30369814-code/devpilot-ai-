@@ -7,11 +7,12 @@
 - [x] Standard-library unit tests
 - [x] GitHub Actions CI for Python tests
 - [x] Opt-in failing exit status for CI
-- [x] Usage and limitations guide (pending documentation PR)
+- [x] Usage and limitations guide
 
 ## Next
-- [ ] Configurable rules and exclusions
-- [ ] Improve directory traversal and skipped-file reporting
+- [x] Configurable rules and exclusions
+- [ ] Prune excluded directories (implementation pending CI)
+- [ ] Add skipped-file reporting
 - [ ] HTML report with accessible design
 - [ ] Optional GitHub PR integration (read-only first)
 - [ ] Optional AI suggestions with explicit opt-in and cost limits
