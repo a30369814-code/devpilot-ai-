@@ -1,6 +1,7 @@
 """Dependency-free, read-only checks for local source trees."""
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -8,6 +9,15 @@ SKIP_DIRS = {'.git', '.venv', 'venv', 'node_modules', '__pycache__', 'dist', 'bu
 TEXT_EXTENSIONS = {'.py', '.js', '.ts', '.tsx', '.jsx', '.json', '.md', '.html', '.css'}
 MAX_FILE_BYTES = 1_000_000
 RULES = frozenset({'trailing-whitespace', 'python-tab', 'missing-final-newline'})
+
+
+def iter_source_paths(root: Path, skip_dirs):
+    """Prune excluded directories before descent; preserve sorted path order."""
+    paths = []
+    for directory, dirs, files in os.walk(root, topdown=True, followlinks=False):
+        dirs[:] = [name for name in dirs if name not in skip_dirs]
+        paths.extend(Path(directory) / name for name in files if name not in skip_dirs)
+    yield from sorted(paths)
 
 
 def analyze(root: Path, *, rules=None, exclude_dirs=()) -> dict:
@@ -21,9 +31,7 @@ def analyze(root: Path, *, rules=None, exclude_dirs=()) -> dict:
         raise ValueError(f'Not a directory: {root}')
     findings = []
     scanned = 0
-    for path in sorted(root.rglob('*')):
-        if any(part in skip_dirs for part in path.relative_to(root).parts):
-            continue
+    for path in iter_source_paths(root, skip_dirs):
         if not path.is_file() or path.is_symlink() or path.suffix.lower() not in TEXT_EXTENSIONS:
             continue
         try:
