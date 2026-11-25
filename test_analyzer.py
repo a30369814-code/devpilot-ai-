@@ -28,5 +28,35 @@ class AnalyzerTests(unittest.TestCase):
                 analyze(Path(tmp) / 'missing')
 
 
+
+class ConfigurationTests(unittest.TestCase):
+    def test_select_single_rule(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'bad.py').write_text('x = 1  ', encoding='utf-8')
+            report = analyze(root, rules=['missing-final-newline'])
+            self.assertEqual([f['rule'] for f in report['findings']], ['missing-final-newline'])
+
+    def test_extra_exclusions_preserve_defaults(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ('generated', 'node_modules'):
+                (root / name).mkdir()
+                (root / name / 'bad.py').write_text('x  ', encoding='utf-8')
+            (root / 'ok.py').write_text('x = 1\n', encoding='utf-8')
+            self.assertEqual(analyze(root, exclude_dirs=['generated'])['files_scanned'], 1)
+
+    def test_unknown_rule(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
+                analyze(Path(tmp), rules=['unknown'])
+
+    def test_empty_rule_selection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'bad.py').write_text('x  ', encoding='utf-8')
+            self.assertEqual(analyze(root, rules=[])['findings'], [])
+
+
 if __name__ == '__main__':
     unittest.main()
