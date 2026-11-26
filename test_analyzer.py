@@ -87,5 +87,27 @@ class TraversalTests(unittest.TestCase):
                              ['src/a.py', 'z.py'])
 
 
+class SkippedFileTests(unittest.TestCase):
+    def test_skip_reasons_and_pruned_directories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'ok.py').write_text('x = 1\n', encoding='utf-8')
+            (root / 'image.bin').write_bytes(b'abc')
+            (root / 'invalid.py').write_bytes(b'\xff')
+            (root / 'large.py').write_bytes(b'x' * 1000001)
+            (root / 'node_modules').mkdir()
+            (root / 'node_modules' / 'ignored.py').write_text('x', encoding='utf-8')
+            report = analyze(root)
+            self.assertEqual(report['files_scanned'], 1)
+            self.assertEqual(report['skipped_files'], {
+                'symlink': 0, 'not_regular_file': 0, 'unsupported_extension': 1,
+                'too_large': 1, 'unreadable': 1,
+            })
+
+    def test_empty_directory_has_zero_counts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(sum(analyze(Path(tmp))['skipped_files'].values()), 0)
+
+
 if __name__ == '__main__':
     unittest.main()
