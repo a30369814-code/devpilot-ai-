@@ -11,8 +11,8 @@
 
 ## Next
 - [x] Configurable rules and exclusions
-- [ ] Prune excluded directories (implementation pending CI)
-- [ ] Add skipped-file reporting
+- [x] Prune excluded directories
+- [ ] Add skipped-file reporting (implementation pending CI)
 - [ ] HTML report with accessible design
 - [ ] Optional GitHub PR integration (read-only first)
 - [ ] Optional AI suggestions with explicit opt-in and cost limits
