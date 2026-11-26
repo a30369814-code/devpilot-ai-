@@ -31,14 +31,24 @@ def analyze(root: Path, *, rules=None, exclude_dirs=()) -> dict:
         raise ValueError(f'Not a directory: {root}')
     findings = []
     scanned = 0
+    skipped = dict.fromkeys(('symlink', 'not_regular_file', 'unsupported_extension', 'too_large', 'unreadable'), 0)
     for path in iter_source_paths(root, skip_dirs):
-        if not path.is_file() or path.is_symlink() or path.suffix.lower() not in TEXT_EXTENSIONS:
+        if path.is_symlink():
+            skipped['symlink'] += 1
+            continue
+        if not path.is_file():
+            skipped['not_regular_file'] += 1
+            continue
+        if path.suffix.lower() not in TEXT_EXTENSIONS:
+            skipped['unsupported_extension'] += 1
             continue
         try:
             if path.stat().st_size > MAX_FILE_BYTES:
+                skipped['too_large'] += 1
                 continue
             content = path.read_text(encoding='utf-8')
         except (OSError, UnicodeError):
+            skipped['unreadable'] += 1
             continue
         scanned += 1
         relative = path.relative_to(root).as_posix()
@@ -49,7 +59,7 @@ def analyze(root: Path, *, rules=None, exclude_dirs=()) -> dict:
                 findings.append({'file': relative, 'line': line_number, 'rule': 'python-tab'})
         if 'missing-final-newline' in active_rules and content and not content.endswith('\n'):
             findings.append({'file': relative, 'line': len(content.splitlines()), 'rule': 'missing-final-newline'})
-    return {'root': str(root), 'files_scanned': scanned, 'findings': findings}
+    return {'root': str(root), 'files_scanned': scanned, 'findings': findings, 'skipped_files': skipped}
 
 
 def main() -> None:
@@ -71,6 +81,7 @@ def main() -> None:
         print(json.dumps(result, indent=2))
     else:
         print(f"Scanned {result['files_scanned']} files; {len(result['findings'])} findings")
+        print('Skipped files: ' + ', '.join(f'{reason}={count}' for reason, count in result['skipped_files'].items()))
         for item in result['findings']:
             print(f"{item['file']}:{item['line']}: {item['rule']}")
     if args.fail_on_findings and result['findings']:
