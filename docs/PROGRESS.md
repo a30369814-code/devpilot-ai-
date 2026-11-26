@@ -14,3 +14,7 @@
 - PR #6 workflow run [45432286636](https://github.com/a30369814-code/devpilot-ai-/actions/runs/45432286636) completed successfully; squash-merged at `73e764afe27b7f8720c1c3eaf787db3608f22c0c`.
 - Prepared directory pruning with deterministic output and two regression tests. CI verification pending.
 - Next: skipped-file reporting and review coverage of CLI exit codes.
+
+## 2026-11-26 — Skipped-file summary
+- PR #7 merged at `a8bc44df795c3aeb1467980b6f69df3045297217` after successful CI run 45557969653.
+- Added aggregate skip reasons to JSON and human-readable output, excluding files inside pruned directories from counts. Added two tests; execution pending CI.
