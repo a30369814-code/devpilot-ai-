@@ -1,8 +1,10 @@
 import tempfile
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
-from analyzer import analyze, iter_source_paths
+from analyzer import analyze, iter_source_paths, render_html
 from unittest.mock import patch
 
 
@@ -107,6 +109,35 @@ class SkippedFileTests(unittest.TestCase):
     def test_empty_directory_has_zero_counts(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(sum(analyze(Path(tmp))['skipped_files'].values()), 0)
+
+
+class HtmlReportTests(unittest.TestCase):
+    def test_escapes_untrusted_filenames(self):
+        report = {'files_scanned': 1, 'findings': [
+            {'file': '<script>alert(1)</script>.py', 'line': 1, 'rule': 'python-tab'}
+        ], 'skipped_files': {'unreadable': 2}}
+        output = render_html(report)
+        self.assertNotIn('<script>', output)
+        self.assertIn('&lt;script&gt;', output)
+        self.assertIn('unreadable', output)
+        self.assertIn('Files scanned: 1', output)
+
+    def test_empty_report(self):
+        output = render_html({'files_scanned': 0, 'findings': [], 'skipped_files': {}})
+        self.assertIn('No findings', output)
+        self.assertIn('<html lang="en">', output)
+
+    def test_cli_html_and_exit_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / 'bad.py').write_text('x  ', encoding='utf-8')
+            command = [sys.executable, str(Path(__file__).with_name('analyzer.py')), tmp]
+            result = subprocess.run(command + ['--html', '--fail-on-findings'],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('trailing-whitespace', result.stdout)
+            conflict = subprocess.run(command + ['--html', '--json'],
+                                      capture_output=True, text=True)
+            self.assertEqual(conflict.returncode, 2)
 
 
 if __name__ == '__main__':

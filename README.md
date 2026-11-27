@@ -18,11 +18,14 @@ Scan another project by passing its directory, for example `python analyzer.py "
 
 ```sh
 python analyzer.py . --json
+python analyzer.py . --html > report.html
 python analyzer.py . --fail-on-findings
 python analyzer.py . --json --fail-on-findings
 ```
 
 The JSON report includes the root directory, number of scanned files, and findings with relative file paths, line numbers and rule identifiers. Exit status is 0 by default, 1 for findings when explicitly requested, and 2 for invalid command-line arguments or a missing directory.
+
+HTML output is standalone, requires no JavaScript or network access, and omits the absolute root path. Use either `--html` or `--json`, not both. Reports include relative filenames; keep them private when appropriate. Skipped-file counts exclude files inside pruned directories. Write reports outside the scanned directory to avoid scanning the report itself.
 
 ## Customize checks
 
@@ -53,4 +56,4 @@ GitHub Actions runs syntax checks, unit tests and a JSON smoke test. See [workfl
 - [Roadmap](docs/ROADMAP.md)
 - [Progress log](docs/PROGRESS.md)
 
-Planned features include accessible HTML reports and optional AI suggestions. These are not implemented yet.
+Optional AI suggestions are planned but not implemented yet.
