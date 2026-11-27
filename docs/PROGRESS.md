@@ -18,3 +18,7 @@
 ## 2026-11-26 — Skipped-file summary
 - PR #7 merged at `a8bc44df795c3aeb1467980b6f69df3045297217` after successful CI run 45557969653.
 - Added aggregate skip reasons to JSON and human-readable output, excluding files inside pruned directories from counts. Added two tests; execution pending CI.
+
+## 2026-11-27 — Standalone HTML report
+- Added opt-in HTML output with escaped dynamic fields, semantic tables and no external resources. Added three regression tests; execution pending CI.
+- Next: verify CI and review rendered report accessibility before further integration.
