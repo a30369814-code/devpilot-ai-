@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from html import escape
 
 SKIP_DIRS = {'.git', '.venv', 'venv', 'node_modules', '__pycache__', 'dist', 'build'}
 TEXT_EXTENSIONS = {'.py', '.js', '.ts', '.tsx', '.jsx', '.json', '.md', '.html', '.css'}
@@ -62,10 +63,47 @@ def analyze(root: Path, *, rules=None, exclude_dirs=()) -> dict:
     return {'root': str(root), 'files_scanned': scanned, 'findings': findings, 'skipped_files': skipped}
 
 
+def render_html(result: dict) -> str:
+    """Render a standalone report without scripts or external resources."""
+    def cell(value):
+        return escape(str(value), quote=True)
+
+    findings = ''.join(
+        f"<tr><td>{cell(item['file'])}</td><td>{cell(item['line'])}</td>"
+        f"<td>{cell(item['rule'])}</td></tr>"
+        for item in result['findings']
+    ) or '<tr><td colspan="3">No findings</td></tr>'
+    skipped = ''.join(
+        f"<tr><th scope=\"row\">{cell(reason)}</th><td>{cell(count)}</td></tr>"
+        for reason, count in sorted(result['skipped_files'].items())
+    )
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        '<title>DevPilot AI report</title>'
+        '<style>body{font:1rem/1.5 system-ui,sans-serif;max-width:70rem;'
+        'margin:2rem auto;padding:0 1rem;color:#172033;background:#fff}'
+        'table{border-collapse:collapse;width:100%;margin-bottom:2rem}'
+        'th,td{text-align:left;padding:.6rem;border:1px solid #aab4c2;'
+        'overflow-wrap:anywhere}th{background:#eef2f7}</style></head><body><main>'
+        '<h1>DevPilot AI report</h1>'
+        f"<p>Files scanned: {cell(result['files_scanned'])} | "
+        f"Findings: {len(result['findings'])}</p>"
+        '<h2>Findings</h2><table><caption>Source hygiene findings</caption>'
+        '<thead><tr><th scope="col">File</th><th scope="col">Line</th>'
+        '<th scope="col">Rule</th></tr></thead>'
+        f'<tbody>{findings}</tbody></table>'
+        '<h2>Skipped files</h2><table><caption>Counts by reason</caption>'
+        f'<tbody>{skipped}</tbody></table></main></body></html>'
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description='Read-only source hygiene analyzer')
     parser.add_argument('path', nargs='?', default='.', help='Directory to inspect')
-    parser.add_argument('--json', action='store_true', help='Output JSON')
+    formats = parser.add_mutually_exclusive_group()
+    formats.add_argument('--json', action='store_true', help='Output JSON')
+    formats.add_argument('--html', action='store_true', help='Output standalone HTML')
     parser.add_argument('--fail-on-findings', action='store_true',
                         help='Exit with status 1 when any findings are detected')
     parser.add_argument('--rule', action='append', choices=sorted(RULES),
@@ -79,6 +117,8 @@ def main() -> None:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(result, indent=2))
+    elif args.html:
+        print(render_html(result))
     else:
         print(f"Scanned {result['files_scanned']} files; {len(result['findings'])} findings")
         print('Skipped files: ' + ', '.join(f'{reason}={count}' for reason, count in result['skipped_files'].items()))
